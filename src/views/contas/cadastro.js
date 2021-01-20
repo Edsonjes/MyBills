@@ -1,14 +1,20 @@
 import React from 'react';
 import { render } from 'react-dom';
 import contaService from '../../app/contaService'
+import { withRouter } from 'react-router-dom'
 
 const estadoIncial = {
+
+    id: '',
     nome: "",
     tipo: "",
     pago: "",
     dataVencimento: "",
     descricao: "",
-    valor: 0
+    valor: 0,
+    sucesso: false,
+    atualizando: false
+
 }
 
 class CadastroConta extends React.Component {
@@ -29,7 +35,8 @@ class CadastroConta extends React.Component {
     }
 
     onSubmit = (event) => {
-        const conta = {
+        const contas = {
+            id: this.state.id,
             nome: this.state.nome,
             tipo: this.state.tipo,
             pago: this.state.pago,
@@ -37,19 +44,41 @@ class CadastroConta extends React.Component {
             descricao: this.state.descricao,
             valor: this.state.valor
         }
-        this.service.salvar(conta)
-        console.log()
+        this.service.salvar(contas)
+        this.setState({ sucesso: true })
     }
 
     limpaCompos = () => {
         this.setState(estadoIncial)
     }
+    componentDidMount() {
+        const id = this.props.match.params.id
+        if (id) {
+            const resultado = this.service.obterContas().filter(contas => contas.id === id)
+            if (resultado.length === 1) {
+                const contaEncontrada = resultado[0]
+                this.setState({ ...contaEncontrada, atualizando: true })
+                
+            }
+        }
+    }
 
     render() {
         return (
             <div className="card border-primary mb-3"  >
-                <div className="card-header">Cadastro de Conta</div>
+                <div className="card-header">
+                    {this.state.atualizando ? 'Atualização ' : 'Cadastro '} de Conta
+                </div>
                 <div className="card-body">
+                    {this.state.sucesso &&
+
+                        <div class="alert alert-dismissible alert-primary">
+                            <button type="button" class="close" data-dismiss="alert">&times;</button>
+                            <strong>Bem feito!  </strong> Cadstro Realizado
+                        </div>
+
+                    }
+
                     <div className="row">
                         <div className="col-md-6">
                             <div className="form-group">
@@ -87,6 +116,12 @@ class CadastroConta extends React.Component {
                                 <input type="text" onChange={this.onChange} name="dataVencimento" value={this.state.dataVencimento} className="form-control"></input>
                             </div>
                         </div>
+                        <div className="col-md-3">
+                            <div className="form-group">
+                                <label> Id:</label>
+                                <input type="text" disabled={this.state.atualizando} onChange={this.onChange} name="id" value={this.state.id} className="form-control"></input>
+                            </div>
+                        </div>
                     </div>
                     <div className="row">
                         <div className="col-md-12">
@@ -98,10 +133,12 @@ class CadastroConta extends React.Component {
                     </div>
                     <div className="row">
                         <div className="col-md-1">
-                            <button type="button" onClick={this.onSubmit} className="btn btn-primary">Salvar</button>
+                            <button type="button" onClick={this.onSubmit} className="btn btn-primary">
+                                {this.state.atualizando ? 'Atualizar' : 'Salvar'}
+                            </button>
                         </div>
                         <div className="col-md-1">
-                            <button type="button" onClick={this.estadoIncial} className="btn btn-warning">Limpar</button>
+                            <button type="button" onClick={this.limpaCompos} className="btn btn-warning">Limpar</button>
                         </div>
                     </div>
                 </div>
@@ -110,4 +147,4 @@ class CadastroConta extends React.Component {
         )
     }
 }
-export default CadastroConta;
+export default withRouter(CadastroConta);
